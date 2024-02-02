@@ -46,7 +46,6 @@ download_release() {
 	fi
 	
 	echo "* Downloading $TOOL_NAME release $version for arch $_arch..."
-	echo $url
 	curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
 	chmod +x $filename
 }
