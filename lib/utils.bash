@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
+set -e
+# set -euo pipefail
 
-set -euo pipefail
-
-# TODO: Ensure this is the correct GitHub homepage where releases can be downloaded for k3s.
-GH_REPO="https://github.com/dmpe/k3s"
+GH_REPO="https://github.com/k3s-io/k3s"
 TOOL_NAME="k3s"
 TOOL_TEST="k3s -v"
 
@@ -27,25 +26,25 @@ sort_versions() {
 list_github_tags() {
 	git ls-remote --tags --refs "$GH_REPO" |
 		grep -o 'refs/tags/.*' | cut -d/ -f3- |
-		sed 's/^v//' # NOTE: You might want to adapt this sed to remove non-version strings from tags
+		sed 's/^v//' | grep -v "rc[1-5]" | grep -v "alpha*" | grep -v "engine*"
 }
 
 list_all_versions() {
-	# TODO: Adapt this. By default we simply list the tag names from GitHub releases.
-	# Change this function if k3s has other means of determining installable versions.
 	list_github_tags
 }
 
 download_release() {
-	local version filename url
+	local version filename url plus
 	version="$1"
 	filename="$2"
+	plus="%2B"
 
-	# TODO: Adapt the release URL convention for k3s
-	url="$GH_REPO/archive/v${version}.tar.gz"
+	new_version=$(sed "s/\+/\%2B/g" <<< "$version")
+	url="$GH_REPO/releases/download/v${new_version}/k3s"
 
 	echo "* Downloading $TOOL_NAME release $version..."
 	curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
+	chmod +x $filename
 }
 
 install_version() {
@@ -57,7 +56,7 @@ install_version() {
 		fail "asdf-$TOOL_NAME supports release installs only"
 	fi
 
-	(
+	# (
 		mkdir -p "$install_path"
 		cp -r "$ASDF_DOWNLOAD_PATH"/* "$install_path"
 
@@ -67,8 +66,9 @@ install_version() {
 		test -x "$install_path/$tool_cmd" || fail "Expected $install_path/$tool_cmd to be executable."
 
 		echo "$TOOL_NAME $version installation was successful!"
-	) || (
-		rm -rf "$install_path"
-		fail "An error occurred while installing $TOOL_NAME $version."
-	)
+	# ) || (
+	# 	rm -rf "$install_path"
+	# 	fail "An error occurred while installing $TOOL_NAME $version."
+	# )
+	true
 }
