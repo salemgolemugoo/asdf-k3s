@@ -45,7 +45,7 @@ download_release() {
 		url="$GH_REPO/releases/download/v${new_version}/k3s-$_arch"
 	fi
 	
-	echo "* Downloading $TOOL_NAME release $version..."
+	echo "* Downloading $TOOL_NAME release $version for arch $_arch..."
 	curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
 	chmod +x $filename
 }
