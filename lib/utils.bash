@@ -13,7 +13,6 @@ fail() {
 
 curl_opts=(-fsSL)
 
-# NOTE: You might want to remove this if k3s is not hosted on GitHub releases.
 if [ -n "${GITHUB_API_TOKEN:-}" ]; then
 	curl_opts=("${curl_opts[@]}" -H "Authorization: token $GITHUB_API_TOKEN")
 fi
@@ -34,12 +33,11 @@ list_all_versions() {
 }
 
 download_release() {
-	local version filename url plus
+	local version filename url new_version
 	version="$1"
 	filename="$2"
-	plus="%2B"
+	new_version=$(echo "${version/+/%2B}")
 
-	new_version=$(sed "s/\+/\%2B/g" <<< "$version")
 	if [[ "x86_64" = "$(uname -m)" ]]; then
 		# default is amd64
 		url="$GH_REPO/releases/download/v${new_version}/k3s"
@@ -48,9 +46,7 @@ download_release() {
 	fi
 	
 	echo "* Downloading $TOOL_NAME release $version..."
-	echo $filename
-	curl "${curl_opts[@]}" -o "$filename" -C - "$url" 
-	#|| fail "Could not download $url"
+	curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
 	chmod +x $filename
 }
 
@@ -67,7 +63,7 @@ install_version() {
 		mkdir -p "$install_path"
 		cp -r "$ASDF_DOWNLOAD_PATH"/* "$install_path"
 
-		# TODO: Assert k3s executable exists.
+		# Assert k3s executable exists.
 		local tool_cmd
 		tool_cmd="$(echo "$TOOL_TEST" | cut -d' ' -f1)"
 		test -x "$install_path/$tool_cmd" || fail "Expected $install_path/$tool_cmd to be executable."
@@ -75,6 +71,6 @@ install_version() {
 		echo "$TOOL_NAME $version installation was successful!"
 	) || (
 		rm -rf "$install_path"
-		# fail "An error occurred while installing $TOOL_NAME $version."
+		fail "An error occurred while installing $TOOL_NAME $version."
 	)
 }
