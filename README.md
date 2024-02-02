@@ -20,6 +20,14 @@
 
 # Install
 
+https://asdf-vm.com/guide/getting-started.html
+
+```shell
+git clone https://github.com/asdf-vm/asdf.git ~/.asdf --branch v0.14.0
+export ASDF_DIR="$HOME/.asdf"
+. "$HOME/.asdf/asdf.sh"
+```
+
 Plugin:
 
 ```shell
