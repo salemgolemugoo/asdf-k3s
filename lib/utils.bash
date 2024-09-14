@@ -4,7 +4,6 @@ set -euo pipefail
 GH_REPO="https://github.com/k3s-io/k3s"
 TOOL_NAME="k3s"
 TOOL_TEST="k3s -v"
-_arch=$(uname -m)
 
 fail() {
 	echo -e "asdf-$TOOL_NAME: $*"
@@ -33,19 +32,19 @@ list_all_versions() {
 }
 
 download_release() {
-	local version filename url new_version
+	local version filename url new_version machine_hardware_name
 	version="$1"
 	filename="$2"
 	new_version=$(echo "${version/+/%2B}")
 
-	if [[ "x86_64" = "$(uname -m)" ]]; then
-		# default is amd64
-		url="$GH_REPO/releases/download/v${new_version}/k3s"
-	else
-		url="$GH_REPO/releases/download/v${new_version}/k3s-$_arch"
-	fi
-	
-	echo "* Downloading $TOOL_NAME release $version for arch $_arch..."
+	machine_hardware_name=$(uname -m)
+	case "${machine_hardware_name}" in
+		'x86_64') local cpu_type='' ;; # amd64 is default
+		'aarch64') local cpu_type='-arm64' ;;
+	esac
+	url="$GH_REPO/releases/download/v${new_version}/k3s${cpu_type}"
+
+	echo "* Downloading $TOOL_NAME release $version for architecture ${machine_hardware_name}..."
 	curl "${curl_opts[@]}" -o "$filename" -C - "$url" || fail "Could not download $url"
 	chmod +x $filename
 }
